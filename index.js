@@ -1,6 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
-import cors from "cors"; // ✅ 1. Import CORS
+import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -12,25 +12,38 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-// ✅ 2. Enable CORS for your frontend
+// ✅ Dynamically set allowed origin
+const allowedOrigins = [
+  "http://localhost:5173", // Local dev
+  "https://expence-tracker-frontend.vercel.app", // 🟢 Your deployed frontend URL
+];
+
+// ✅ Allow only listed origins
 app.use(cors({
-  origin: 'http://localhost:5173', // React app's URL
-  credentials: true
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
 }));
 
-// ✅ 3. Serve static files (profile images)
+// ✅ Serve static files (e.g. profile pics)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Debugging logs
+// ✅ Log for debug
 console.log("✅ Server is starting...");
 console.log("✅ Loading auth & expense routes...");
 
-// Routes
+// ✅ Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/expenses", expenseRoutes);
 
+// ✅ Test route
 app.get("/", (req, res) => {
   res.send("🚀 Server is running!");
 });
